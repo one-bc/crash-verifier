@@ -4,44 +4,128 @@
   <meta charset="UTF-8">
   <title>Crash Game Verification</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 20px; }
-    table { border-collapse: collapse; width: 100%; margin-top: 20px; }
-    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
-    th { background: #f2f2f2; }
-    input, button { margin: 5px 0; padding: 5px; }
+    body {
+      font-family: Arial, sans-serif;
+      margin: 40px auto;
+      max-width: 900px;
+      background: #f9f9f9;
+      color: #333;
+      line-height: 1.6;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 30px;
+      color: #222;
+    }
+    .card {
+      background: #fff;
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      margin-top: 10px;
+      font-weight: bold;
+    }
+    input {
+      width: 100%;
+      padding: 8px;
+      margin-top: 4px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    button {
+      margin-top: 15px;
+      padding: 10px 20px;
+      background: #4CAF50;
+      border: none;
+      border-radius: 6px;
+      color: #fff;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #45a049;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+      font-size: 14px;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 10px;
+    }
+    th {
+      background: #4CAF50;
+      color: white;
+      text-align: center;
+    }
+    td {
+      word-break: break-all;
+      text-align: center;
+    }
+    .info {
+      font-size: 14px;
+      color: #555;
+      margin-bottom: 10px;
+    }
+    .highlight {
+      font-weight: bold;
+      color: #333;
+    }
   </style>
 </head>
 <body>
   <h1>Crash - Game Verification</h1>
 
-  <label>Game Hash: <input id="gameHash" size="70"></label><br>
-  <label>Salt: <input id="salt" size="70"></label><br>
-  <label>Amount of Games: <input id="games" type="number" value="10"></label><br>
-  <button onclick="verify()">Verify</button>
+  <div class="card">
+    <label>Game Hash</label>
+    <input id="gameHash" placeholder="Enter game hash...">
 
-  <table id="results">
-    <thead>
-      <tr><th>Game #</th><th>Hash</th><th>Bust</th></tr>
-    </thead>
-    <tbody></tbody>
-  </table>
+    <label>Salt</label>
+    <input id="salt" placeholder="Enter salt...">
+
+    <label>Amount of Games</label>
+    <input id="games" type="number" value="10">
+
+    <button onclick="verify()">Verify</button>
+  </div>
+
+  <div class="card">
+    <div class="info">Below are the calculated results. Each hash corresponds to one game round.</div>
+    <table id="results">
+      <thead>
+        <tr>
+          <th>Game #</th>
+          <th>Hash</th>
+          <th>Bust</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
 
   <script>
     // SHA256 计算函数
     async function sha256(message) {
       const msgBuffer = new TextEncoder().encode(message);
       const hashBuffer = await crypto.subtle.digest("SHA-256", msgBuffer);
-      return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, "0")).join("");
+      return Array.from(new Uint8Array(hashBuffer))
+        .map(b => b.toString(16).padStart(2, "0"))
+        .join("");
     }
 
-    // Bust 计算公式（简化版）
+    // Bust 计算公式
     function calculateBust(hash) {
-      // 取 hash 的前 52 位（13 hex）
-      const hex = hash.slice(0, 13);
+      const hex = hash.slice(0, 13); // 前 52 位
       const r = parseInt(hex, 16);
       const X = r / Math.pow(2, 52);
       let result = 99 / (1 - X);
-      if (result < 100) result = 100; // 小于 100 强制为 100
+      if (result < 100) result = 100;
       return (result / 100).toFixed(2);
     }
 
@@ -56,10 +140,14 @@
 
       for (let i = 0; i < games; i++) {
         const combined = hash + salt;
-        hash = await sha256(combined); // 生成下一个 hash
+        hash = await sha256(combined);
         const bust = calculateBust(hash);
 
-        const row = `<tr><td>${i+1}</td><td>${hash}</td><td>${bust}</td></tr>`;
+        const row = `<tr>
+          <td>${i+1}</td>
+          <td>${hash}</td>
+          <td class="highlight">${bust}x</td>
+        </tr>`;
         tbody.insertAdjacentHTML("beforeend", row);
       }
     }
