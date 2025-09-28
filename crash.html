@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Crash/hash → 爆点倍率验证器</title>
+  <style>
+    body{font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial; background:#f7f8fb; color:#222; margin:0; padding:20px;}
+    .wrap{max-width:920px;margin:16px auto;background:#fff;border-radius:8px;padding:18px;box-shadow:0 6px 18px rgba(27,45,71,0.06);}
+    h1{margin:0 0 12px;font-size:20px;}
+    p.lead{margin:0 0 18px;color:#555;}
+    label{display:block;margin:14px 0 6px;font-weight:600;}
+    textarea, input[type="text"], input[type="number"]{width:100%;padding:10px;border:1px solid #e2e6ef;border-radius:6px;box-sizing:border-box;font-size:14px}
+    button{display:inline-block;padding:10px 14px;border-radius:6px;border:0;background:#2d8cf0;color:#fff;font-weight:600;cursor:pointer;margin-right:8px;}
+    button.secondary{background:#6c757d;}
+    .row{display:flex;gap:12px;flex-wrap:wrap}
+    .col{flex:1;min-width:240px}
+    .result{margin-top:12px;padding:12px;border-radius:6px;background:#f1f8ff;border:1px solid #dbeeff;color:#0b3b80}
+    .muted{color:#666;font-size:13px;margin-top:6px}
+    .small{font-size:13px;color:#444}
+    .footer{margin-top:18px;color:#777;font-size:13px}
+    pre{background:#0f1724;color:#f8fafc;padding:12px;border-radius:6px;overflow:auto}
+    .danger{color:#b91c1c}
+    .ok{color:#0b6623}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Crash/hash → 爆点倍率验证器</h1>
+    <p class="lead">把 SHA256 哈希（hex）输入下方即可得到本轮对应的爆点倍率。也可用于链验证（把某个 hash 连续做 SHA-256 若干次，检查是否等于已发布的锚点）。</p>
+
+    <label for="hashInput">输入单个 SHA256 哈希（hex）</label>
+    <input id="hashInput" type="text" placeholder="例如：6b5124897c3c48d0e46cc9249f08c7e560792459f1bad1171224643b5d2be231" />
+
+    <div style="margin-top:10px;">
+      <button id="calcBtn">计算倍率</button>
+      <button id="clearBtn" class="secondary">清除</button>
+    </div>
+
+    <div id="out" class="result" style="display:none;"></div>
+
+    <hr style="margin:18px 0">
+
+    <h2 style="font-size:16px;margin-bottom:6px">链验证（Hash Chain Verify）</h2>
+    <p class="muted">如果已知“锚点”hash（链某一端）并想验证某个 hash 是否在该链上（即对该 hash 做 k 次 SHA256 是否得到锚点），可用下面工具。</p>
+
+    <label>候选 hash（hex）</label>
+    <input id="candidateHash" type="text" placeholder="候选 hash" />
+
+    <label>目标锚点 hash（hex）</label>
+    <input id="anchorHash" type="text" placeholder="锚点 hash（例如链末端或已发布的最终值）" />
+
+    <div class="row" style="margin-top:8px;">
+      <div class="col">
+        <label>最大迭代次数（建议不要太大，会耗时）</label>
+        <input id="maxIter" type="number" value="10000" min="1" max="1000000" />
+        <div class="muted">注意：浏览器中迭代次数过大会卡死页面。建议先小范围尝试（如 1000、10000）。</div>
+      </div>
+    </div>
+
+    <div style="margin-top:10px;">
+      <button id="verifyBtn">开始验证</button>
+      <button id="stopBtn" class="secondary" disabled>停止</button>
+    </div>
+
+    <div id="verifyOut" class="result" style="display:none;"></div>
+
+    <hr style="margin:18px 0">
+
+    <div class="footer">
+      <div class="small">实现说明（简要）：</div>
+      <ol>
+        <li>取输入哈希的前 13 个十六进制字符（13 hex = 52 bits）。</li>
+        <li>将该 13-hex 转为整数 val，取 X = val / 2^52。</li>
+        <li>计算 result = 99 / (1 - X)。若 result &lt; 100 则强制 result = 100。</li>
+        <li>取整（向下取整 floor(result)），再除以 100 得到最终倍率（例如 170 → 1.70）。</li>
+      </ol>
+      <div style="margin-top:8px">示例哈希 <code>6b5124897c3c48d0e46cc9249f08c7e560792459f1bad1171224643b5d2be231</code> → 结果 <strong>1.70</strong>（与文档示例一致）。</div>
+    </div>
+
+    <hr style="margin:16px 0">
+
+    <div class="small">本页可直接部署到 GitHub Pages（详见下方教程）。</div>
+  </div>
+
+<script>
+/* Helper: hex string -> Uint8Array */
+function hexToBytes(hex) {
+  if (!hex) return new Uint8Array();
+  hex = hex.replace(/[^0-9a-fA-F]/g,'');
+  if (hex.length % 2) hex = '0'+hex;
+  const len = hex.length / 2;
+  const out = new Uint8Array(len);
+  for (let i=0;i<len;i++){
+    out[i] = parseInt(hex.substr(i*2,2),16);
+  }
+  return out;
+}
+
+/* Helper: ArrayBuffer -> hex string */
+function buf2hex(buffer) {
+  const bytes = new Uint8Array(buffer);
+  return Array.from(bytes).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+/* 计算并显示倍率的函数 */
+async function computeMultiplierFromHash(hashHex) {
+  const outEl = document.getElementById('out');
+
+  if (!hashHex) {
+    outEl.style.display='block';
+    outEl.innerHTML = '<span class="danger">错误：请输入哈希。</span>';
+    return;
+  }
+  // 只保留 0-9a-f
+  hashHex = hashHex.trim().toLowerCase().replace(/[^0-9a-f]/g,'');
+  if (hashHex.length < 13) {
+    outEl.style.display='block';
+    outEl.innerHTML = '<span class="danger">错误：哈希长度不足（需要至少 13 个十六进制字符）。</span>';
+    return;
+  }
+  const first13 = hashHex.slice(0,13);
+  // 将 13 hex 转为 Number（<= 2^52，可安全放入 JS Number）
+  const val = Number(BigInt('0x' + first13));
+  const maxVal = Math.pow(2,52); // 4503599627370496
+  const X = val / maxVal;
+  // 公式
+  let result = 99 / (1 - X);
+  if (!isFinite(result) || result <= 0) {
+    outEl.style.display='block';
+    outEl.innerHTML = '<span class="danger">计算异常（除0或无穷）。请检查哈希是否有效。</span>';
+    return;
+  }
+  if (result < 100) result = 100;
+  // 向下取整（与示例一致）
+  const floored = Math.floor(result);
+  const multiplier = (floored / 100);
+  outEl.style.display='block';
+  outEl.innerHTML = '<div class="small">前13 hex: <code>' + first13 + '</code> （十进制 ' + val + '）</div>'
+                  + '<div class="small">X = ' + X.toPrecision(6) + '</div>'
+                  + '<div style="margin-top:8px"><strong>计算结果：</strong> result = ' + result.toFixed(6) + ' → 向下取整 ' + floored + ' → 最终倍率 <span style="font-size:18px;color:#0b3b80">' + multiplier.toFixed(2) + 'x</span></div>'
+                  + '<div class="muted">（若你需要更高精度或别的取整规则，可调整代码）</div>';
+}
+
+/* SHA-256（输入字节数组，返回 hex） */
+async function sha256HexFromBytes(bytes) {
+  const buf = await crypto.subtle.digest('SHA-256', bytes);
+  return buf2hex(buf);
+}
+
+/* 验证链：从 candidate 反复做 sha256，看能否在 maxIter 次内等于 anchor */
+let verifyRunning = false;
+async function verifyChain(candidateHex, anchorHex, maxIter, statusCallback) {
+  verifyRunning = true;
+  const outEl = document.getElementById('verifyOut');
+  outEl.style.display='block';
+  outEl.innerHTML = '开始验证...';
+  candidateHex = candidateHex.trim().toLowerCase().replace(/[^0-9a-f]/g,'');
+  anchorHex = anchorHex.trim().toLowerCase().replace(/[^0-9a-f]/g,'');
+  if (!candidateHex || !anchorHex) {
+    outEl.innerHTML = '<span class="danger">错误：请同时输入候选 hash 和 锚点 hash。</span>';
+    verifyRunning=false;
+    return;
+  }
+  // 转为 bytes
+  let curBytes = hexToBytes(candidateHex);
+  // 如果候选本身就是锚点，直接通过
+  if (candidateHex === anchorHex) {
+    outEl.innerHTML = '<span class="ok">匹配：候选 hash 与锚点相同（0 次）。</span>';
+    verifyRunning=false;
+    return;
+  }
+  const maxSafe = Math.min(maxIter, 10000000); // safety cap（不过浏览器处理大量迭代会很慢）
+  for (let i=1;i<=maxSafe;i++){
+    if (!verifyRunning) {
+      statusCallback && statusCallback({stopped:true,iter:i-1});
+      outEl.innerHTML = '<span class="muted">已停止。已进行 ' + (i-1) + ' 次迭代。</span>';
+      return;
+    }
+    const nextHex = await sha256HexFromBytes(curBytes);
+    if (i % 100 === 0) {
+      outEl.innerHTML = '迭代中：已执行 ' + i + ' 次... 最近 hash: ' + nextHex.slice(0,20) + '...';
+    }
+    if (nextHex === anchorHex) {
+      outEl.innerHTML = '<span class="ok">验证通过：候选经过 ' + i + ' 次 SHA256 后得到锚点。</span>';
+      verifyRunning=false;
+      return;
+    }
+    // 为下一轮准备：nextHex -> bytes
+    curBytes = hexToBytes(nextHex);
+    // occasional yield to keep UI responsive
+    if (i % 200 === 0) await new Promise(r => setTimeout(r, 0));
+  }
+  outEl.innerHTML = '<span class="danger">未找到：在 ' + maxSafe + ' 次迭代内未匹配到锚点（尝试更多次数可能会成功，但会非常耗时）。</span>';
+  verifyRunning=false;
+}
+
+/* 事件绑定 */
+document.getElementById('calcBtn').addEventListener('click', async () => {
+  const h = document.getElementById('hashInput').value;
+  await computeMultiplierFromHash(h);
+});
+
+document.getElementById('clearBtn').addEventListener('click', () => {
+  document.getElementById('hashInput').value='';
+  const out = document.getElementById('out'); out.style.display='none'; out.innerHTML='';
+});
+
+document.getElementById('verifyBtn').addEventListener('click', async () => {
+  if (verifyRunning) return;
+  document.getElementById('stopBtn').disabled = false;
+  const candidate = document.getElementById('candidateHash').value;
+  const anchor = document.getElementById('anchorHash').value;
+  let maxIter = parseInt(document.getElementById('maxIter').value) || 10000;
+  // safety
+  if (maxIter > 5000000) {
+    if (!confirm('你设置了非常大的迭代次数（>'+maxIter+'），这可能会让浏览器卡住。确定继续？')) {
+      return;
+    }
+  }
+  document.getElementById('verifyBtn').disabled = true;
+  await verifyChain(candidate, anchor, maxIter, (s) => {
+    /* optional progress callback */
+  });
+  document.getElementById('verifyBtn').disabled = false;
+  document.getElementById('stopBtn').disabled = true;
+});
+
+document.getElementById('stopBtn').addEventListener('click', () => {
+  verifyRunning = false;
+  document.getElementById('stopBtn').disabled = true;
+});
+
+/* 按 enter 触发计算 */
+document.getElementById('hashInput').addEventListener('keydown', (e)=>{
+  if (e.key === 'Enter') document.getElementById('calcBtn').click();
+});
+</script>
+</body>
+</html>
