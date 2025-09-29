@@ -64,8 +64,8 @@ async function verify() {
   tbody.innerHTML = "";
 
   let rate = 0;
-  let hash_id = hash; // 默认显示输入的 hash
-  let source = "formula"; // 默认来源为公式
+  let hash_id = hash; // 默认显示输入 hash
+  let source = "calculated"; // 默认来源为前端计算
 
   try {
     const res = await fetch("https://bytetokenworld.com/public/verify/verify-hash.php", {
@@ -76,8 +76,9 @@ async function verify() {
     const data = await res.json();
 
     if(data.success) {
-      rate = data.rate;
-      hash_id = data.hash_id; // 使用服务器返回的 hash_id
+      // 使用服务器返回
+      rate = parseFloat(data.rate);
+      hash_id = data.hash_id || hash;
       source = "server";
     } else {
       // 服务器没找到，用公式计算
@@ -89,7 +90,7 @@ async function verify() {
   }
 
   const row = document.createElement("tr");
-  row.innerHTML = `<td>${hash_id}</td><td class="highlight">${rate.toFixed(2)}x ${source === "server" ? "(server)" : "(calculated)"}</td>`;
+  row.innerHTML = `<td>${hash_id}</td><td class="highlight">${rate.toFixed(2)}x (${source})</td>`;
   tbody.appendChild(row);
 }
 
