@@ -1,190 +1,88 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Crash Game Verification</title>
-  <style>
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      margin: 0;
-      padding: 0;
-      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-      color: #f4f4f4;
-    }
-    header {
-      background: rgba(0,0,0,0.6);
-      padding: 20px;
-      text-align: center;
-      border-bottom: 1px solid #444;
-    }
-    header h1 {
-      margin: 0;
-      font-size: 28px;
-      color: #00e676;
-      letter-spacing: 1px;
-    }
-    .container {
-      max-width: 1000px;
-      margin: 30px auto;
-      padding: 20px;
-    }
-    .card {
-      background: rgba(255,255,255,0.05);
-      border-radius: 12px;
-      padding: 25px;
-      margin-bottom: 25px;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.3);
-    }
-    .card h2 {
-      margin-top: 0;
-      color: #00e5ff;
-      font-size: 20px;
-      border-left: 4px solid #00e5ff;
-      padding-left: 10px;
-    }
-    label {
-      display: block;
-      margin-top: 12px;
-      font-weight: bold;
-      font-size: 14px;
-      color: #ddd;
-    }
-    input {
-      width: 100%;
-      padding: 10px;
-      margin-top: 6px;
-      border: none;
-      border-radius: 6px;
-      background: rgba(255,255,255,0.1);
-      color: #fff;
-      font-size: 14px;
-    }
-    input:focus {
-      outline: none;
-      border: 1px solid #00e676;
-    }
-    button {
-      margin-top: 18px;
-      padding: 12px 25px;
-      background: linear-gradient(90deg, #00e676, #00e5ff);
-      border: none;
-      border-radius: 6px;
-      color: #000;
-      font-weight: bold;
-      font-size: 15px;
-      cursor: pointer;
-      transition: 0.3s;
-    }
-    button:hover {
-      opacity: 0.85;
-      transform: translateY(-1px);
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 20px;
-      background: rgba(255,255,255,0.05);
-      border-radius: 8px;
-      overflow: hidden;
-    }
-    th, td {
-      padding: 12px;
-      text-align: center;
-    }
-    th {
-      background: #00e5ff;
-      color: #000;
-      font-weight: bold;
-      font-size: 14px;
-    }
-    td {
-      border-top: 1px solid rgba(255,255,255,0.1);
-      font-size: 13px;
-    }
-    .highlight {
-      font-weight: bold;
-      color: #00e676;
-    }
-  </style>
+<meta charset="UTF-8">
+<title>Crash Game Verification</title>
+<style>
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0; padding: 0;
+    background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+    color: #f4f4f4;
+  }
+  header { background: rgba(0,0,0,0.6); padding: 20px; text-align:center; border-bottom:1px solid #444;}
+  header h1 { margin:0; font-size:28px; color:#00e676; letter-spacing:1px; }
+  .container { max-width:800px; margin:30px auto; padding:20px;}
+  .card { background: rgba(255,255,255,0.05); border-radius:12px; padding:25px; margin-bottom:25px; box-shadow:0 8px 20px rgba(0,0,0,0.3);}
+  .card h2 { margin-top:0; color:#00e5ff; font-size:20px; border-left:4px solid #00e5ff; padding-left:10px;}
+  label { display:block; margin-top:12px; font-weight:bold; font-size:14px; color:#ddd; }
+  input { width:100%; padding:10px; margin-top:6px; border:none; border-radius:6px; background: rgba(255,255,255,0.1); color:#fff; font-size:14px; }
+  input:focus { outline:none; border:1px solid #00e676;}
+  button { margin-top:18px; padding:12px 25px; background:linear-gradient(90deg,#00e676,#00e5ff); border:none; border-radius:6px; color:#000; font-weight:bold; font-size:15px; cursor:pointer; transition:0.3s;}
+  button:hover { opacity:0.85; transform: translateY(-1px);}
+  table { width:100%; border-collapse: collapse; margin-top:20px; background: rgba(255,255,255,0.05); border-radius:8px; overflow:hidden; }
+  th, td { padding:12px; text-align:center;}
+  th { background:#00e5ff; color:#000; font-weight:bold; font-size:14px; }
+  td { border-top:1px solid rgba(255,255,255,0.1); font-size:13px; }
+  .highlight { font-weight:bold; color:#00e676;}
+</style>
 </head>
 <body>
-  <header>
-    <h1>Crash Game Verification</h1>
-  </header>
+<header>
+  <h1>Crash Game Verification</h1>
+</header>
 
-  <div class="container">
-    <div class="card">
-      <h2>Verification Input</h2>
-      <label>Game Hash</label>
-      <input id="gameHash" placeholder="Enter game hash..." value="e7c8ff41c9b802b71c28ccb77b4eca2de7ae1e5e1368b9fc8aefa1765c7994c0">
+<div class="container">
+  <div class="card">
+    <h2>Verification Input</h2>
+    <label>Game Hash</label>
+    <input id="gameHash" placeholder="Enter game hash...">
 
-      <label>Salt</label>
-      <input id="salt" placeholder="Enter salt..." value="0000000000000000000301e2801a9a9598bfb114e574a91a887f2132f33047e6">
-
-      <label>Amount of Games</label>
-      <input id="games" type="number" value="5">
-
-      <button onclick="verify()">Verify Now</button>
-    </div>
-
-    <div class="card">
-      <h2>Verification Results</h2>
-      <table id="results">
-        <thead>
-          <tr>
-            <th>Hash</th>
-            <th>Bust</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-    </div>
+    <button onclick="verify()">Verify Now</button>
   </div>
 
-  <script>
-    async function verify() {
-      const hash = document.getElementById("gameHash").value.trim();
-      const games = parseInt(document.getElementById("games").value);
+  <div class="card">
+    <h2>Verification Results</h2>
+    <table id="results">
+      <thead>
+        <tr>
+          <th>Hash</th>
+          <th>Rate</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</div>
 
-      const tbody = document.querySelector("#results tbody");
-      tbody.innerHTML = "";
+<script>
+async function verify() {
+  const hash = document.getElementById("gameHash").value.trim();
+  if(!hash) { alert("请输入哈希值"); return; }
 
-      let currentHash = hash;
+  const tbody = document.querySelector("#results tbody");
+  tbody.innerHTML = "";
 
-      for (let i = 0; i < games; i++) {
-        // 使用真实爆点公式
-        let bust = calculateBust(currentHash);
+  try {
+    const res = await fetch("https://your-server.com/verify-hash.php", {
+      method:"POST",
+      headers:{ "Content-Type": "application/json" },
+      body: JSON.stringify({ hash })
+    });
+    const data = await res.json();
 
-        const row = document.createElement("tr");
-        row.innerHTML = `
-          <td>${currentHash}</td>
-          <td class="highlight">${bust.toFixed(2)}x</td>
-        `;
-        tbody.appendChild(row);
-
-        // 生成前一个 hash
-        currentHash = await sha256(currentHash);
-      }
+    if(data.success) {
+      const row = document.createElement("tr");
+      row.innerHTML = `<td>${data.hash}</td><td class="highlight">${data.rate}x</td>`;
+      tbody.appendChild(row);
+    } else {
+      alert(data.message || "未找到记录");
     }
-
-    function calculateBust(hash) {
-      // 取前 52 bit
-      let h = parseInt(hash.substring(0, 13), 16);
-      let e = Math.pow(2, 52);
-      let result = (e / (h + 1));
-
-      // 转换成倍率
-      let bust = Math.floor(result * 100) / 100;
-
-      return Math.max(1.00, bust);
-    }
-
-    async function sha256(message) {
-      const msgBuffer = new TextEncoder().encode(message);
-      const hashBuffer = await crypto.subtle.digest("SHA-256", msgBuffer);
-      const hashArray = Array.from(new Uint8Array(hashBuffer));
-      return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-    }
-  </script>
+  } catch(err) {
+    console.error(err);
+    alert("服务器请求失败");
+  }
+}
+</script>
 </body>
 </html>
