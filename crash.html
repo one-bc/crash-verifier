@@ -25,6 +25,7 @@
   th { background:#00e5ff; color:#000; font-weight:bold; font-size:14px; }
   td { border-top:1px solid rgba(255,255,255,0.1); font-size:13px; }
   .highlight { font-weight:bold; color:#00e676;}
+  .error { color: #ff4d4f; font-weight:bold; }
 </style>
 </head>
 <body>
@@ -37,7 +38,6 @@
     <h2>Verification Input</h2>
     <label>Game Hash</label>
     <input id="gameHash" placeholder="Enter game hash...">
-
     <button onclick="verify()">Verify Now</button>
   </div>
 
@@ -47,7 +47,7 @@
       <thead>
         <tr>
           <th>Hash</th>
-          <th>Rate</th>
+          <th>Rate / Error</th>
         </tr>
       </thead>
       <tbody></tbody>
@@ -64,23 +64,29 @@ async function verify() {
   tbody.innerHTML = "";
 
   try {
-    const res = await fetch("http://104.238.172.22/public/verify/verify-hash.php", {
+    const res = await fetch("https://yourdomain.com/verify-hash.php", { // <-- 改成你服务器 PHP 文件地址
       method:"POST",
       headers:{ "Content-Type": "application/json" },
       body: JSON.stringify({ hash })
     });
+
     const data = await res.json();
 
+    const row = document.createElement("tr");
+
     if(data.success) {
-      const row = document.createElement("tr");
       row.innerHTML = `<td>${data.hash}</td><td class="highlight">${data.rate}x</td>`;
-      tbody.appendChild(row);
     } else {
-      alert(data.message || "未找到记录");
+      row.innerHTML = `<td>${hash}</td><td class="error">${data.message}</td>`;
     }
+
+    tbody.appendChild(row);
+
   } catch(err) {
     console.error(err);
-    alert("服务器请求失败");
+    const row = document.createElement("tr");
+    row.innerHTML = `<td>${hash}</td><td class="error">服务器请求失败: ${err.message}</td>`;
+    tbody.appendChild(row);
   }
 }
 </script>
