@@ -100,7 +100,6 @@
     td {
       border-top: 1px solid rgba(255,255,255,0.1);
       font-size: 13px;
-      word-break: break-all;
     }
     .highlight {
       font-weight: bold;
@@ -118,6 +117,12 @@
       <h2>Verification Input</h2>
       <label>Game Hash</label>
       <input id="gameHash" placeholder="Enter game hash..." value="e7c8ff41c9b802b71c28ccb77b4eca2de7ae1e5e1368b9fc8aefa1765c7994c0">
+
+      <label>Salt</label>
+      <input id="salt" placeholder="Enter salt..." value="0000000000000000000301e2801a9a9598bfb114e574a91a887f2132f33047e6">
+
+      <label>Amount of Games</label>
+      <input id="games" type="number" value="5">
 
       <button onclick="verify()">Verify Now</button>
     </div>
@@ -137,31 +142,48 @@
   </div>
 
   <script>
-    // 模拟从服务器获取数据
-    const mockServerData = {
-      "e7c8ff41c9b802b71c28ccb77b4eca2de7ae1e5e1368b9fc8aefa1765c7994c0": { bust: 2.45 },
-      "28301b2bce7b5e45edac235baa76e70e1e72c4714f50e3e9cd33abc6a5086530": { bust: 1.44 }
-    };
+    async function verify() {
+      const hash = document.getElementById("gameHash").value.trim();
+      const games = parseInt(document.getElementById("games").value);
 
-    function verify() {
-      const hash = document.getElementById('gameHash').value.trim();
       const tbody = document.querySelector("#results tbody");
-      tbody.innerHTML = ""; // 清空旧结果
+      tbody.innerHTML = "";
 
-      if (!hash) {
-        alert("请输入 Game Hash！");
-        return;
+      let currentHash = hash;
+
+      for (let i = 0; i < games; i++) {
+        // 使用真实爆点公式
+        let bust = calculateBust(currentHash);
+
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${currentHash}</td>
+          <td class="highlight">${bust.toFixed(2)}x</td>
+        `;
+        tbody.appendChild(row);
+
+        // 生成前一个 hash
+        currentHash = await sha256(currentHash);
       }
+    }
 
-      // 假设从服务器请求
-      const result = mockServerData[hash];
+    function calculateBust(hash) {
+      // 取前 52 bit
+      let h = parseInt(hash.substring(0, 13), 16);
+      let e = Math.pow(2, 52);
+      let result = (e / (h + 1));
 
-      if (result) {
-        const row = `<tr><td>${hash}</td><td class="highlight">${result.bust}</td></tr>`;
-        tbody.innerHTML = row;
-      } else {
-        tbody.innerHTML = `<tr><td colspan="2" style="color:red;">未找到该哈希的记录</td></tr>`;
-      }
+      // 转换成倍率
+      let bust = Math.floor(result * 100) / 100;
+
+      return Math.max(1.00, bust);
+    }
+
+    async function sha256(message) {
+      const msgBuffer = new TextEncoder().encode(message);
+      const hashBuffer = await crypto.subtle.digest("SHA-256", msgBuffer);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
     }
   </script>
 </body>
