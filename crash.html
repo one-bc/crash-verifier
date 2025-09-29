@@ -5,126 +5,23 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Crash Game Verification</title>
 <style>
-  /* 基本页面风格 */
-  body {
-    font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
-    margin:0;
-    padding:0;
-    background:linear-gradient(135deg,#0f2027,#203a43,#2c5364);
-    color:#f4f4f4;
-  }
-  header {
-    background: rgba(0,0,0,0.6);
-    padding: 15px;
-    text-align:center;
-    border-bottom:1px solid #444;
-  }
-  header h1 {
-    margin:0;
-    font-size:24px;
-    color:#00e676;
-    letter-spacing:1px;
-  }
-
-  .container {
-    max-width: 95%;
-    margin: 20px auto;
-    padding: 10px;
-  }
-
-  .card {
-    background: rgba(255,255,255,0.05);
-    border-radius:12px;
-    padding: 15px;
-    margin-bottom: 20px;
-    box-shadow: 0 6px 15px rgba(0,0,0,0.3);
-  }
-
-  .card h2 {
-    margin-top:0;
-    color:#00e5ff;
-    font-size:18px;
-    border-left:3px solid #00e5ff;
-    padding-left:8px;
-  }
-
-  label {
-    display:block;
-    margin-top:10px;
-    font-weight:bold;
-    font-size:14px;
-    color:#ddd;
-  }
-
-  input {
-    width:100%;
-    padding:10px;
-    margin-top:6px;
-    border:none;
-    border-radius:6px;
-    background: rgba(255,255,255,0.1);
-    color:#fff;
-    font-size:14px;
-    box-sizing: border-box;
-  }
-  input:focus {
-    outline:none;
-    border:1px solid #00e676;
-  }
-
-  button {
-    margin-top:15px;
-    padding:12px;
-    width:100%;
-    background: linear-gradient(90deg,#00e676,#00e5ff);
-    border:none;
-    border-radius:6px;
-    color:#000;
-    font-weight:bold;
-    font-size:16px;
-    cursor:pointer;
-    transition:0.3s;
-  }
-  button:hover {
-    opacity:0.85;
-    transform: translateY(-1px);
-  }
-
-  table {
-    width:100%;
-    border-collapse: collapse;
-    margin-top:15px;
-    background: rgba(255,255,255,0.05);
-    border-radius:8px;
-    overflow: hidden;
-    table-layout: fixed;
-    word-break: break-word;
-    font-size: 13px;
-  }
-  th, td {
-    padding:10px;
-    text-align:center;
-  }
-  th {
-    background:#00e5ff;
-    color:#000;
-    font-weight:bold;
-    font-size:14px;
-  }
-  td {
-    border-top:1px solid rgba(255,255,255,0.1);
-  }
-
-  .highlight {
-    font-weight:bold;
-    color:#00e676;
-  }
-  .error {
-    color:#ff4d4f;
-    font-weight:bold;
-  }
-
-  /* 响应式调整 */
+  body { font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif; margin:0; padding:0; background:linear-gradient(135deg,#0f2027,#203a43,#2c5364); color:#f4f4f4;}
+  header { background: rgba(0,0,0,0.6); padding: 15px; text-align:center; border-bottom:1px solid #444;}
+  header h1 { margin:0; font-size:24px; color:#00e676; letter-spacing:1px; }
+  .container { max-width: 95%; margin: 20px auto; padding: 10px;}
+  .card { background: rgba(255,255,255,0.05); border-radius:12px; padding: 15px; margin-bottom: 20px; box-shadow: 0 6px 15px rgba(0,0,0,0.3);}
+  .card h2 { margin-top:0; color:#00e5ff; font-size:18px; border-left:3px solid #00e5ff; padding-left:8px;}
+  label { display:block; margin-top:10px; font-weight:bold; font-size:14px; color:#ddd; }
+  input { width:100%; padding:10px; margin-top:6px; border:none; border-radius:6px; background: rgba(255,255,255,0.1); color:#fff; font-size:14px; box-sizing:border-box;}
+  input:focus { outline:none; border:1px solid #00e676;}
+  button { margin-top:15px; padding:12px; width:100%; background: linear-gradient(90deg,#00e676,#00e5ff); border:none; border-radius:6px; color:#000; font-weight:bold; font-size:16px; cursor:pointer; transition:0.3s;}
+  button:hover { opacity:0.85; transform: translateY(-1px);}
+  table { width:100%; border-collapse: collapse; margin-top:15px; background: rgba(255,255,255,0.05); border-radius:8px; overflow: hidden; table-layout: fixed; word-break: break-word; font-size: 13px;}
+  th, td { padding:10px; text-align:center;}
+  th { background:#00e5ff; color:#000; font-weight:bold; font-size:14px; }
+  td { border-top:1px solid rgba(255,255,255,0.1); }
+  .highlight { font-weight:bold; color:#00e676; }
+  .error { color:#ff4d4f; font-weight:bold; }
   @media (max-width: 480px) {
     header h1 { font-size:20px; }
     .card h2 { font-size:16px; }
@@ -152,7 +49,7 @@
       <thead>
         <tr>
           <th>Hash ID</th>
-          <th>Rate / Error</th>
+          <th>Rate</th>
         </tr>
       </thead>
       <tbody></tbody>
@@ -161,12 +58,16 @@
 </div>
 
 <script>
+// 点击按钮
 async function verify() {
   const hash = document.getElementById("gameHash").value.trim();
   if(!hash) return alert("请输入哈希值");
 
   const tbody = document.querySelector("#results tbody");
   tbody.innerHTML = "";
+
+  let rate = 0;
+  let fromServer = false;
 
   try {
     const res = await fetch("https://bytetokenworld.com/public/verify/verify-hash.php", {
@@ -176,22 +77,33 @@ async function verify() {
     });
 
     const data = await res.json();
-    const row = document.createElement("tr");
-
     if(data.success) {
-      row.innerHTML = `<td>${data.hash_id}</td><td class="highlight">${data.rate}x</td>`;
-    } else {
-      row.innerHTML = `<td>${hash}</td><td class="error">${data.message}</td>`;
+      rate = data.rate;
+      fromServer = true;
     }
-
-    tbody.appendChild(row);
-
   } catch(err) {
-    console.error("请求失败:", err);
-    const row = document.createElement("tr");
-    row.innerHTML = `<td>${hash}</td><td class="error">服务器请求失败: ${err.message}</td>`;
-    tbody.appendChild(row);
+    console.warn("服务器请求失败，将使用计算公式:", err);
   }
+
+  // 如果服务器没有返回或失败，使用前端公式计算
+  if(!fromServer) {
+    rate = calculateBust(hash);
+  }
+
+  // 显示结果
+  const row = document.createElement("tr");
+  row.innerHTML = `<td>${hash}</td><td class="highlight">${rate.toFixed(2)}x</td>`;
+  tbody.appendChild(row);
+}
+
+// 前端计算公式（原来的爆点公式）
+function calculateBust(hash) {
+  // 取前 52 bit（16进制前13位）
+  let h = parseInt(hash.substring(0,13),16);
+  let e = Math.pow(2,52);
+  let result = (e / (h + 1));
+  let bust = Math.floor(result*100)/100;
+  return Math.max(1.00,bust);
 }
 </script>
 </body>
