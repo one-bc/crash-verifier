@@ -58,7 +58,6 @@
 </div>
 
 <script>
-// 点击按钮
 async function verify() {
   const hash = document.getElementById("gameHash").value.trim();
   if(!hash) return alert("请输入哈希值");
@@ -67,7 +66,7 @@ async function verify() {
   tbody.innerHTML = "";
 
   let rate = 0;
-  let fromServer = false;
+  let source = "server"; // 标记来源
 
   try {
     const res = await fetch("https://bytetokenworld.com/public/verify/verify-hash.php", {
@@ -77,28 +76,32 @@ async function verify() {
     });
 
     const data = await res.json();
+
     if(data.success) {
       rate = data.rate;
-      fromServer = true;
+      source = "server";
+    } else {
+      // 服务器没找到，用公式计算
+      rate = calculateBust(hash);
+      source = "formula";
     }
   } catch(err) {
-    console.warn("服务器请求失败，将使用计算公式:", err);
-  }
-
-  // 如果服务器没有返回或失败，使用前端公式计算
-  if(!fromServer) {
+    // 请求失败，用公式计算
     rate = calculateBust(hash);
+    source = "formula";
   }
 
-  // 显示结果
   const row = document.createElement("tr");
-  row.innerHTML = `<td>${hash}</td><td class="highlight">${rate.toFixed(2)}x</td>`;
+  if(source === "server") {
+    row.innerHTML = `<td>${hash}</td><td class="highlight">${rate.toFixed(2)}x (server)</td>`;
+  } else {
+    row.innerHTML = `<td>${hash}</td><td class="highlight">${rate.toFixed(2)}x (calculated)</td>`;
+  }
   tbody.appendChild(row);
 }
 
-// 前端计算公式（原来的爆点公式）
+// 前端公式计算
 function calculateBust(hash) {
-  // 取前 52 bit（16进制前13位）
   let h = parseInt(hash.substring(0,13),16);
   let e = Math.pow(2,52);
   let result = (e / (h + 1));
