@@ -100,6 +100,7 @@
     td {
       border-top: 1px solid rgba(255,255,255,0.1);
       font-size: 13px;
+      word-break: break-all;
     }
     .highlight {
       font-weight: bold;
@@ -116,13 +117,7 @@
     <div class="card">
       <h2>Verification Input</h2>
       <label>Game Hash</label>
-      <input id="gameHash" placeholder="Enter game hash..." value="28301b2bce7b5e45edac235baa76e70e1e72c4714f50e3e9cd33abc6a5086530">
-
-      <label>Salt</label>
-      <input id="salt" placeholder="Enter salt..." value="0000000000000000000301e2801a9a9598bfb114e574a91a887f2132f33047e6">
-
-      <label>Amount of Games</label>
-      <input id="games" type="number" value="10">
+      <input id="gameHash" placeholder="Enter game hash..." value="e7c8ff41c9b802b71c28ccb77b4eca2de7ae1e5e1368b9fc8aefa1765c7994c0">
 
       <button onclick="verify()">Verify Now</button>
     </div>
@@ -132,7 +127,6 @@
       <table id="results">
         <thead>
           <tr>
-            <th>Game #</th>
             <th>Hash</th>
             <th>Bust</th>
           </tr>
@@ -142,4 +136,33 @@
     </div>
   </div>
 
-  <scri
+  <script>
+    // 模拟从服务器获取数据
+    const mockServerData = {
+      "e7c8ff41c9b802b71c28ccb77b4eca2de7ae1e5e1368b9fc8aefa1765c7994c0": { bust: 2.45 },
+      "28301b2bce7b5e45edac235baa76e70e1e72c4714f50e3e9cd33abc6a5086530": { bust: 1.44 }
+    };
+
+    function verify() {
+      const hash = document.getElementById('gameHash').value.trim();
+      const tbody = document.querySelector("#results tbody");
+      tbody.innerHTML = ""; // 清空旧结果
+
+      if (!hash) {
+        alert("请输入 Game Hash！");
+        return;
+      }
+
+      // 假设从服务器请求
+      const result = mockServerData[hash];
+
+      if (result) {
+        const row = `<tr><td>${hash}</td><td class="highlight">${result.bust}</td></tr>`;
+        tbody.innerHTML = row;
+      } else {
+        tbody.innerHTML = `<tr><td colspan="2" style="color:red;">未找到该哈希的记录</td></tr>`;
+      }
+    }
+  </script>
+</body>
+</html>
