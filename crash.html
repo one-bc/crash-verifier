@@ -64,7 +64,7 @@ async function verify() {
   tbody.innerHTML = "";
 
   try {
-    const res = await fetch("https://yourdomain.com/verify-hash.php", { // <-- 改成你服务器 PHP 文件地址
+    const res = await fetch("http://104.238.172.22/public/verify/verify-hash.php", { // <-- 改成你服务器 PHP 文件地址
       method:"POST",
       headers:{ "Content-Type": "application/json" },
       body: JSON.stringify({ hash })
