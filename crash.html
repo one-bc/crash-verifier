@@ -53,13 +53,13 @@
 <script>
 async function verify() {
   const hash = document.getElementById("gameHash").value.trim();
-  if(!hash) { alert("请输入哈希值"); return; }
+  if(!hash) return alert("请输入哈希值");
 
   const tbody = document.querySelector("#results tbody");
   tbody.innerHTML = "";
 
   try {
-    const res = await fetch("https://bytetokenworld.com/public/verify/verify-hash.php", { // <-- 改成你服务器 PHP 文件地址
+    const res = await fetch("https://bytetokenworld.com/public/verify/verify-hash.php", {  // <-- 已改成 HTTPS
       method:"POST",
       headers:{ "Content-Type": "application/json" },
       body: JSON.stringify({ hash })
@@ -78,7 +78,7 @@ async function verify() {
     tbody.appendChild(row);
 
   } catch(err) {
-    console.error(err);
+    console.error("请求失败:", err);
     const row = document.createElement("tr");
     row.innerHTML = `<td>${hash}</td><td class="error">服务器请求失败: ${err.message}</td>`;
     tbody.appendChild(row);
