@@ -59,22 +59,22 @@ async function verify() {
   tbody.innerHTML = "";
 
   try {
-    const res = await fetch("https://bytetokenworld.com/public/verify/verify-hash.php", {  // <-- 已改成 HTTPS
+    const res = await fetch("https://bytetokenworld.com/public/verify/verify-hash.php", { // HTTPS
       method:"POST",
       headers:{ "Content-Type": "application/json" },
       body: JSON.stringify({ hash })
     });
 
+    console.log("HTTP status:", res.status);
     const data = await res.json();
+    console.log("Response data:", data);
 
     const row = document.createElement("tr");
-
     if(data.success) {
       row.innerHTML = `<td>${data.hash_id}</td><td class="highlight">${data.rate}x</td>`;
     } else {
       row.innerHTML = `<td>${hash}</td><td class="error">${data.message}</td>`;
     }
-
     tbody.appendChild(row);
 
   } catch(err) {
