@@ -20,7 +20,6 @@
   th { background:#00e5ff; color:#000; font-weight:bold; font-size:14px; }
   td { border-top:1px solid rgba(255,255,255,0.1); }
   .highlight { font-weight:bold; color:#00e676; }
-  .error { color:#ff4d4f; font-weight:bold; }
   @media (max-width: 480px) {
     header h1 { font-size:20px; }
     .card h2 { font-size:16px; }
@@ -64,8 +63,8 @@ async function verify() {
   tbody.innerHTML = "";
 
   let rate = 0;
-  let hash_id = hash; // 默认显示输入 hash
-  let source = "calculated"; // 默认来源为前端计算
+  let hash_id = hash;
+  let source = "calculated";
 
   try {
     const res = await fetch("https://bytetokenworld.com/public/verify/verify-hash.php", {
@@ -75,17 +74,18 @@ async function verify() {
     });
     const data = await res.json();
 
+    console.log("服务器返回:", data); // 调试用，可确认字段名
+
     if(data.success) {
-      // 使用服务器返回
+      // 自动识别 hash_id 或 hash 字段
+      hash_id = data.hash_id || data.hash || hash;
       rate = parseFloat(data.rate);
-      hash_id = data.hash_id || hash;
       source = "server";
     } else {
-      // 服务器没找到，用公式计算
       rate = calculateBust(hash);
     }
   } catch(err) {
-    // 请求失败，用公式计算
+    console.log("请求异常:", err);
     rate = calculateBust(hash);
   }
 
