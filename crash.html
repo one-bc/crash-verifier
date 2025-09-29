@@ -11,7 +11,6 @@
   .container { max-width: 95%; margin: 20px auto; padding: 10px;}
   .card { background: rgba(255,255,255,0.05); border-radius:12px; padding: 15px; margin-bottom: 20px; box-shadow: 0 6px 15px rgba(0,0,0,0.3);}
   .card h2 { margin-top:0; color:#00e5ff; font-size:18px; border-left:3px solid #00e5ff; padding-left:8px;}
-  label { display:block; margin-top:10px; font-weight:bold; font-size:14px; color:#ddd; }
   input { width:100%; padding:10px; margin-top:6px; border:none; border-radius:6px; background: rgba(255,255,255,0.1); color:#fff; font-size:14px; box-sizing:border-box;}
   input:focus { outline:none; border:1px solid #00e676;}
   button { margin-top:15px; padding:12px; width:100%; background: linear-gradient(90deg,#00e676,#00e5ff); border:none; border-radius:6px; color:#000; font-weight:bold; font-size:16px; cursor:pointer; transition:0.3s;}
@@ -38,7 +37,6 @@
 <div class="container">
   <div class="card">
     <h2>Verification Input</h2>
-    <label>Game Hash</label>
     <input id="gameHash" placeholder="Enter game hash...">
     <button onclick="verify()">Verify Now</button>
   </div>
@@ -66,7 +64,8 @@ async function verify() {
   tbody.innerHTML = "";
 
   let rate = 0;
-  let source = "server"; // 标记来源
+  let hash_id = hash; // 默认显示输入的 hash
+  let source = "formula"; // 默认来源为公式
 
   try {
     const res = await fetch("https://bytetokenworld.com/public/verify/verify-hash.php", {
@@ -74,29 +73,23 @@ async function verify() {
       headers:{ "Content-Type": "application/json" },
       body: JSON.stringify({ hash })
     });
-
     const data = await res.json();
 
     if(data.success) {
       rate = data.rate;
+      hash_id = data.hash_id; // 使用服务器返回的 hash_id
       source = "server";
     } else {
       // 服务器没找到，用公式计算
       rate = calculateBust(hash);
-      source = "formula";
     }
   } catch(err) {
     // 请求失败，用公式计算
     rate = calculateBust(hash);
-    source = "formula";
   }
 
   const row = document.createElement("tr");
-  if(source === "server") {
-    row.innerHTML = `<td>${hash}</td><td class="highlight">${rate.toFixed(2)}x (server)</td>`;
-  } else {
-    row.innerHTML = `<td>${hash}</td><td class="highlight">${rate.toFixed(2)}x (calculated)</td>`;
-  }
+  row.innerHTML = `<td>${hash_id}</td><td class="highlight">${rate.toFixed(2)}x ${source === "server" ? "(server)" : "(calculated)"}</td>`;
   tbody.appendChild(row);
 }
 
