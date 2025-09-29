@@ -57,7 +57,7 @@
 <script>
 async function verify() {
   const hash = document.getElementById("gameHash").value.trim();
-  if(!hash) return alert("请输入哈希值");
+  if(!hash) return alert("Invalid hash value");
 
   const tbody = document.querySelector("#results tbody");
   tbody.innerHTML = "";
