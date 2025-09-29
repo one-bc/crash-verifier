@@ -2,25 +2,135 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Crash Game Verification</title>
 <style>
-  body { font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif; margin:0; padding:0; background:linear-gradient(135deg,#0f2027,#203a43,#2c5364); color:#f4f4f4;}
-  header { background: rgba(0,0,0,0.6); padding:20px; text-align:center; border-bottom:1px solid #444;}
-  header h1 { margin:0; font-size:28px; color:#00e676; letter-spacing:1px; }
-  .container { max-width:800px; margin:30px auto; padding:20px;}
-  .card { background: rgba(255,255,255,0.05); border-radius:12px; padding:25px; margin-bottom:25px; box-shadow:0 8px 20px rgba(0,0,0,0.3);}
-  .card h2 { margin-top:0; color:#00e5ff; font-size:20px; border-left:4px solid #00e5ff; padding-left:10px;}
-  label { display:block; margin-top:12px; font-weight:bold; font-size:14px; color:#ddd; }
-  input { width:100%; padding:10px; margin-top:6px; border:none; border-radius:6px; background: rgba(255,255,255,0.1); color:#fff; font-size:14px; }
-  input:focus { outline:none; border:1px solid #00e676;}
-  button { margin-top:18px; padding:12px 25px; background:linear-gradient(90deg,#00e676,#00e5ff); border:none; border-radius:6px; color:#000; font-weight:bold; font-size:15px; cursor:pointer; transition:0.3s;}
-  button:hover { opacity:0.85; transform: translateY(-1px);}
-  table { width:100%; border-collapse: collapse; margin-top:20px; background: rgba(255,255,255,0.05); border-radius:8px; overflow:hidden; }
-  th, td { padding:12px; text-align:center;}
-  th { background:#00e5ff; color:#000; font-weight:bold; font-size:14px; }
-  td { border-top:1px solid rgba(255,255,255,0.1); font-size:13px; }
-  .highlight { font-weight:bold; color:#00e676;}
-  .error { color: #ff4d4f; font-weight:bold; }
+  /* 基本页面风格 */
+  body {
+    font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
+    margin:0;
+    padding:0;
+    background:linear-gradient(135deg,#0f2027,#203a43,#2c5364);
+    color:#f4f4f4;
+  }
+  header {
+    background: rgba(0,0,0,0.6);
+    padding: 15px;
+    text-align:center;
+    border-bottom:1px solid #444;
+  }
+  header h1 {
+    margin:0;
+    font-size:24px;
+    color:#00e676;
+    letter-spacing:1px;
+  }
+
+  .container {
+    max-width: 95%;
+    margin: 20px auto;
+    padding: 10px;
+  }
+
+  .card {
+    background: rgba(255,255,255,0.05);
+    border-radius:12px;
+    padding: 15px;
+    margin-bottom: 20px;
+    box-shadow: 0 6px 15px rgba(0,0,0,0.3);
+  }
+
+  .card h2 {
+    margin-top:0;
+    color:#00e5ff;
+    font-size:18px;
+    border-left:3px solid #00e5ff;
+    padding-left:8px;
+  }
+
+  label {
+    display:block;
+    margin-top:10px;
+    font-weight:bold;
+    font-size:14px;
+    color:#ddd;
+  }
+
+  input {
+    width:100%;
+    padding:10px;
+    margin-top:6px;
+    border:none;
+    border-radius:6px;
+    background: rgba(255,255,255,0.1);
+    color:#fff;
+    font-size:14px;
+    box-sizing: border-box;
+  }
+  input:focus {
+    outline:none;
+    border:1px solid #00e676;
+  }
+
+  button {
+    margin-top:15px;
+    padding:12px;
+    width:100%;
+    background: linear-gradient(90deg,#00e676,#00e5ff);
+    border:none;
+    border-radius:6px;
+    color:#000;
+    font-weight:bold;
+    font-size:16px;
+    cursor:pointer;
+    transition:0.3s;
+  }
+  button:hover {
+    opacity:0.85;
+    transform: translateY(-1px);
+  }
+
+  table {
+    width:100%;
+    border-collapse: collapse;
+    margin-top:15px;
+    background: rgba(255,255,255,0.05);
+    border-radius:8px;
+    overflow: hidden;
+    table-layout: fixed;
+    word-break: break-word;
+    font-size: 13px;
+  }
+  th, td {
+    padding:10px;
+    text-align:center;
+  }
+  th {
+    background:#00e5ff;
+    color:#000;
+    font-weight:bold;
+    font-size:14px;
+  }
+  td {
+    border-top:1px solid rgba(255,255,255,0.1);
+  }
+
+  .highlight {
+    font-weight:bold;
+    color:#00e676;
+  }
+  .error {
+    color:#ff4d4f;
+    font-weight:bold;
+  }
+
+  /* 响应式调整 */
+  @media (max-width: 480px) {
+    header h1 { font-size:20px; }
+    .card h2 { font-size:16px; }
+    input, button { font-size:14px; padding:10px; }
+    table th, table td { padding:8px; font-size:12px; }
+  }
 </style>
 </head>
 <body>
@@ -59,22 +169,21 @@ async function verify() {
   tbody.innerHTML = "";
 
   try {
-    const res = await fetch("https://bytetokenworld.com/public/verify/verify-hash.php", { // HTTPS
+    const res = await fetch("https://bytetokenworld.com/public/verify/verify-hash.php", {
       method:"POST",
       headers:{ "Content-Type": "application/json" },
       body: JSON.stringify({ hash })
     });
 
-    console.log("HTTP status:", res.status);
     const data = await res.json();
-    console.log("Response data:", data);
-
     const row = document.createElement("tr");
+
     if(data.success) {
       row.innerHTML = `<td>${data.hash_id}</td><td class="highlight">${data.rate}x</td>`;
     } else {
       row.innerHTML = `<td>${hash}</td><td class="error">${data.message}</td>`;
     }
+
     tbody.appendChild(row);
 
   } catch(err) {
