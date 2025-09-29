@@ -64,7 +64,7 @@ async function verify() {
   tbody.innerHTML = "";
 
   try {
-    const res = await fetch("104.238.172.22/public/verify/verify-hash.php", {
+    const res = await fetch("http://104.238.172.22/public/verify/verify-hash.php", {
       method:"POST",
       headers:{ "Content-Type": "application/json" },
       body: JSON.stringify({ hash })
